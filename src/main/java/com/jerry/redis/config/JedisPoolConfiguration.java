@@ -17,6 +17,8 @@ public class JedisPoolConfiguration {
 
     private Integer port = 6379;
 
+    private Integer timeout;
+
     private String username;
 
     private String password;
@@ -33,7 +35,6 @@ public class JedisPoolConfiguration {
         config.setMinIdle(minIdle);
         config.setMaxIdle(maxIdle);
         config.setMaxTotal(maxTotal);
-
-        return new JedisPool(config, host, port, username, password);
+        return new JedisPool(config, host, port, timeout, username, password);
     }
 }
