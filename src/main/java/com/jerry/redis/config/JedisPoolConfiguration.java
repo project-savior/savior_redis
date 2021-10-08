@@ -35,6 +35,7 @@ public class JedisPoolConfiguration {
         config.setMinIdle(minIdle);
         config.setMaxIdle(maxIdle);
         config.setMaxTotal(maxTotal);
+
         return new JedisPool(config, host, port, timeout, username, password);
     }
 }
