@@ -1,5 +1,6 @@
 package com.jerry.redis.lowlevel;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
@@ -13,6 +14,7 @@ import java.util.Set;
  * 哈希表相关操作底层封装
  * Hash table related low-level encapsulation
  */
+@Slf4j
 @Component
 public class HashRedisClient {
     private final JedisPool pool;
