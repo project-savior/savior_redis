@@ -57,8 +57,12 @@ public class RedisHelper {
         return stringRedisClient;
     }
 
-    public <T> T lockTask(String key, Long waitTime, Long leaseTime, TimeUnit timeUnit, Callable<T> callable) {
+    public <T> TaskResult<T> lockTask(String key, Long waitTime, Long leaseTime, TimeUnit timeUnit, Callable<T> callable) {
         RLock lock = redissonClient.getLock(key);
+        // 假设一定失败
+        TaskResult<T> taskResult = new TaskResult<>();
+        taskResult.setCompleted(false);
+        taskResult.setResult(null);
         try {
             boolean hasLock;
             if (Objects.isNull(leaseTime) || leaseTime <= 0) {
@@ -67,17 +71,19 @@ public class RedisHelper {
                 hasLock = lock.tryLock(waitTime, leaseTime, timeUnit);
             }
             if (hasLock) {
-                return callable.call();
+                // 如果成功了，重新设置返回值
+                T callResult = callable.call();
+                taskResult.setCompleted(true);
+                taskResult.setResult(callResult);
             }
-
         } catch (Exception e) {
-            throw new RuntimeException(String.format("failed to acquire distributed lock,Cause: %s", e.getMessage()));
+            log.warn("failed to acquire distributed lock,Cause: {}", e.getMessage());
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
             }
         }
-        throw new RuntimeException("failed to acquire distributed lock");
+        return taskResult;
     }
 
 }
