@@ -1,9 +1,11 @@
 package com.jerry.redis.utils;
 
 import com.jerry.redis.interfaces.Callable;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -12,16 +14,19 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author 22454
  */
+@Getter
 @Slf4j
 @Component
-public class RedisLockHelper {
+public class RedisHelper {
+    private final RedisTemplate<String,String> redisTemplate;
     private final RedissonClient redissonClient;
 
-    public RedisLockHelper(RedissonClient redissonClient) {
+    public RedisHelper(RedisTemplate<String, String> redisTemplate, RedissonClient redissonClient) {
+        this.redisTemplate = redisTemplate;
         this.redissonClient = redissonClient;
     }
 
-    public <T> TaskResult<T> lockTask(String key, Long waitTime, Long leaseTime, TimeUnit timeUnit, Callable<T> callable) {
+    public <T> TaskResult<T> lockTask(String key, Long waitTime, Long leaseTime, TimeUnit timeUnit, Callable<T> callable) throws InterruptedException {
         RLock lock = redissonClient.getLock(key);
         // 假设一定失败
         TaskResult<T> taskResult = new TaskResult<>();
@@ -42,6 +47,7 @@ public class RedisLockHelper {
             }
         } catch (Exception e) {
             log.warn("failed to acquire distributed lock,Cause: {}", e.getMessage());
+            throw e;
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -49,5 +55,6 @@ public class RedisLockHelper {
         }
         return taskResult;
     }
+
 
 }
